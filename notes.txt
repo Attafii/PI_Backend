@@ -1,0 +1,8 @@
+npm install express
+npm install bcrypt jsonwebtoken nodemailer dotenv moment
+npm install cors 
+ To start the projet Run : npm start 
+
+library tags
+https://www.npmjs.com/package/react-tag-input
+https://react-select.com/home

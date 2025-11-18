@@ -510,7 +510,7 @@ async function loginUser(req, res) {
             email: user.email,
             role: user.role, 
         };
-
+        localStorage.setItem("id" , user._id);
         // Renvoi de l'utilisateur et du token
        res.json({ user: userData, token });
        

@@ -4,6 +4,7 @@
 
 const Publication = require('../models/Publication');
 const Utilisateur = require('../models/Utilisateur');
+const Contrat = require('../models/Contrat');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
@@ -197,6 +198,32 @@ async function acceptCandidature(req, res) {
         publication.statut = "En cours";
 
         await publication.save();
+
+        // AUTO-GENERATE CONTRACT
+        try {
+            const dateFinEstimee = new Date();
+            dateFinEstimee.setDate(dateFinEstimee.getDate() + candidature.delaiPropose);
+
+            const contrat = new Contrat({
+                publicationId: publication._id,
+                clientId: publication.client,
+                freelanceId: candidature.candidatId,
+                titre: publication.titre,
+                description: publication.description,
+                montantTotal: candidature.prixPropose,
+                delaiJours: candidature.delaiPropose,
+                dateFinEstimee: dateFinEstimee,
+                statut: 'Brouillon',
+                // Copy milestones from publication if they exist
+                milestones: publication.milestones || []
+            });
+
+            await contrat.save();
+            console.log(`✅ Contract auto-generated: ${contrat._id}`);
+        } catch (contractError) {
+            console.error("Contract generation failed (non-critical):", contractError);
+            // Continue even if contract creation fails
+        }
 
         // Populate for response
         const updatedPublication = await Publication.findById(publicationId)

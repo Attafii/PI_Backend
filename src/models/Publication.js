@@ -46,6 +46,10 @@ const publicationSchema = new mongoose.Schema({
     ref: 'Utilisateur',
     required: true 
   },
+  categorie: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Categorie'
+  },
   specialiteRequise: { 
     type: String 
   },
@@ -75,7 +79,13 @@ const publicationSchema = new mongoose.Schema({
   },
   delaiFinal: {
     type: Number
-  }
+  },
+  milestones: [{
+    titre: String,
+    description: String,
+    montant: Number,
+    dateLimite: Date
+  }]
 });
 
 const Publication = mongoose.model('Publication', publicationSchema);

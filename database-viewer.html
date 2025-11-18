@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Viewer - FreelancerBackend</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .stat-card h3 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+        .stat-card p {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .collections {
+            padding: 30px;
+        }
+        .collection-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .collection-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        .collection-card:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        .collection-card h3 {
+            margin-bottom: 10px;
+        }
+        .collection-card .count {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .collection-card:hover .count {
+            color: white;
+        }
+        .data-viewer {
+            padding: 30px;
+            display: none;
+        }
+        .data-viewer.active {
+            display: block;
+        }
+        .back-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            font-size: 1em;
+        }
+        .back-button:hover {
+            background: #5568d3;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .data-table th {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+        .data-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            max-width: 600px;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+        .error {
+            background: #ff4757;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗄️ Database Viewer</h1>
+            <p>FreelancerBackend MongoDB Dashboard</p>
+        </div>
+
+        <div id="stats" class="stats">
+            <div class="loading">Loading database statistics...</div>
+        </div>
+
+        <div id="collections" class="collections">
+            <h2>Collections</h2>
+            <div class="collection-list" id="collectionList">
+                <div class="loading">Loading collections...</div>
+            </div>
+        </div>
+
+        <div id="dataViewer" class="data-viewer">
+            <button class="back-button" onclick="showCollections()">← Back to Collections</button>
+            <h2 id="collectionTitle"></h2>
+            <div id="dataContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8001/api';
+
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_BASE}/database/stats/overview`);
+                const data = await response.json();
+                
+                const statsHtml = `
+                    <div class="stat-card">
+                        <h3>${data.database}</h3>
+                        <p>Database Name</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>${data.collections.length}</h3>
+                        <p>Collections</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>${formatBytes(data.dataSize)}</h3>
+                        <p>Data Size</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>${formatBytes(data.storageSize)}</h3>
+                        <p>Storage Size</p>
+                    </div>
+                `;
+                document.getElementById('stats').innerHTML = statsHtml;
+                
+                // Load collections
+                loadCollections(data.collections);
+            } catch (error) {
+                document.getElementById('stats').innerHTML = `<div class="error">Error loading stats: ${error.message}</div>`;
+            }
+        }
+
+        function loadCollections(collections) {
+            const html = collections.map(col => `
+                <div class="collection-card" onclick="viewCollection('${col.name}')">
+                    <h3>${col.name}</h3>
+                    <div class="count">${col.count}</div>
+                    <p>documents</p>
+                </div>
+            `).join('');
+            document.getElementById('collectionList').innerHTML = html;
+        }
+
+        async function viewCollection(collectionName) {
+            try {
+                document.getElementById('collections').style.display = 'none';
+                document.getElementById('dataViewer').classList.add('active');
+                document.getElementById('collectionTitle').textContent = collectionName;
+                document.getElementById('dataContent').innerHTML = '<div class="loading">Loading data...</div>';
+
+                const response = await fetch(`${API_BASE}/database/${collectionName}`);
+                const result = await response.json();
+
+                if (result.data.length === 0) {
+                    document.getElementById('dataContent').innerHTML = '<p>No documents found in this collection.</p>';
+                    return;
+                }
+
+                // Create table
+                const keys = Object.keys(result.data[0]);
+                const tableHtml = `
+                    <p><strong>Total documents:</strong> ${result.count}</p>
+                    <table class="data-table">
+                        <thead>
+                            <tr>${keys.map(k => `<th>${k}</th>`).join('')}</tr>
+                        </thead>
+                        <tbody>
+                            ${result.data.map(doc => `
+                                <tr>
+                                    ${keys.map(k => `<td>${formatValue(doc[k])}</td>`).join('')}
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                document.getElementById('dataContent').innerHTML = tableHtml;
+            } catch (error) {
+                document.getElementById('dataContent').innerHTML = `<div class="error">Error loading collection: ${error.message}</div>`;
+            }
+        }
+
+        function showCollections() {
+            document.getElementById('collections').style.display = 'block';
+            document.getElementById('dataViewer').classList.remove('active');
+        }
+
+        function formatValue(value) {
+            if (value === null || value === undefined) return '<em>null</em>';
+            if (typeof value === 'object') return `<pre>${JSON.stringify(value, null, 2).substring(0, 100)}...</pre>`;
+            if (typeof value === 'string' && value.length > 50) return value.substring(0, 50) + '...';
+            return value;
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        // Load data on page load
+        loadStats();
+    </script>
+</body>
+</html>

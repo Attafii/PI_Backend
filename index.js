@@ -31,6 +31,11 @@ app.get('/api', (req, res) => {
     res.json({ "message": "Hello Crud Node Express" });
 });
 
+// Serve database viewer
+app.get('/database-viewer', (req, res) => {
+    res.sendFile(__dirname + '/database-viewer.html');
+});
+
 //configuration des routes
 const userRoutes = require('./src/routes/UtilisateurRoutes.js');
 app.use('/api', userRoutes);
@@ -55,3 +60,9 @@ app.use('/api', StatisticsRoutes);
 
 const PublicationRoutes = require('./src/routes/PublicationRoutes.js');
 app.use('/api', PublicationRoutes);
+
+const ContratRoutes = require('./src/routes/ContratRoutes.js');
+app.use('/api/contrats', ContratRoutes);
+
+const DatabaseRoutes = require('./src/routes/DatabaseRoutes.js');
+app.use('/api', DatabaseRoutes);
